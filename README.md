@@ -1,6 +1,6 @@
 # TTE Screensaver (live dashboard fork)
 
-![Live TTE clock — ColorShift on time, date, and weather](docs/assets/demo.gif)
+![Live TTE clock — Slide, Fireworks, and Unstable on time, date, and weather](docs/assets/demo.gif)
 
 [![GitHub Pages](https://img.shields.io/badge/demo-github%20pages-3dff9a?style=for-the-badge)](https://gmcclelland90.github.io/tte-screensaver/)
 
