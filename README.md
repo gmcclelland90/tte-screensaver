@@ -1,5 +1,7 @@
 # TTE Screensaver (live dashboard fork)
 
+![Live TTE clock — ColorShift on time, date, and weather](docs/assets/demo.gif)
+
 [![GitHub Pages](https://img.shields.io/badge/demo-github%20pages-3dff9a?style=for-the-badge)](https://gmcclelland90.github.io/tte-screensaver/)
 
 A focused fork of [limehawk/tte-screensaver](https://github.com/limehawk/tte-screensaver) (MIT). Credit to **limehawk** for the original multi-monitor pygame screensaver and Terminal Text Effects pipeline.
