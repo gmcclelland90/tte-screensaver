@@ -28,4 +28,6 @@ config.json
 Thumbs.db
 
 # Local docs (research notes, not for repo)
-docs/
+# GitHub Pages lives in docs/; ignore local research notes instead
+research-notes/
+demo-frames/

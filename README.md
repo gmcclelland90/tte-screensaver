@@ -1,5 +1,7 @@
 # TTE Screensaver (live dashboard fork)
 
+[![GitHub Pages](https://img.shields.io/badge/demo-github%20pages-3dff9a?style=for-the-badge)](https://gmcclelland90.github.io/tte-screensaver/)
+
 A focused fork of [limehawk/tte-screensaver](https://github.com/limehawk/tte-screensaver) (MIT). Credit to **limehawk** for the original multi-monitor pygame screensaver and Terminal Text Effects pipeline.
 
 Generated ASCII for **local time + date + weather** is the TTE input. Effects animate every character — there is no second HUD. The static LIMEHAWK logo remains as fallback when the live dashboard is off.
