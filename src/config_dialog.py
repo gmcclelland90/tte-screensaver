@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
-from typing import List
+from typing import List, Optional
 
 from .config import Config, load_config, save_config
 from .effects import get_available_effect_names
@@ -15,7 +15,7 @@ class ConfigDialog:
         self.config = load_config()
         self.root = tk.Tk()
         self.root.title("TTE Screensaver Settings")
-        self.root.geometry("800x700")
+        self.root.geometry("800x900")
         self.root.resizable(True, True)
 
         # Store checkbox variables
@@ -30,13 +30,95 @@ class ConfigDialog:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
+        # Live dashboard section
+        dash_frame = ttk.LabelFrame(main_frame, text="Live dashboard", padding="10")
+        dash_frame.pack(fill=tk.X, pady=(0, 10))
+
+        self.use_live_dashboard_var = tk.BooleanVar(value=self.config.use_live_dashboard)
+        ttk.Checkbutton(
+            dash_frame,
+            text="Use live time / date / weather",
+            variable=self.use_live_dashboard_var,
+        ).pack(anchor=tk.W, pady=(0, 6))
+
+        clock_row = ttk.Frame(dash_frame)
+        clock_row.pack(fill=tk.X, pady=2)
+        ttk.Label(clock_row, text="Clock format:").pack(side=tk.LEFT)
+        self.clock_format_var = tk.StringVar(value=self.config.clock_format or "24h")
+        clock_combo = ttk.Combobox(
+            clock_row,
+            textvariable=self.clock_format_var,
+            values=("24h", "12h"),
+            state="readonly",
+            width=8,
+        )
+        clock_combo.pack(side=tk.LEFT, padx=(10, 0))
+
+        font_row = ttk.Frame(dash_frame)
+        font_row.pack(fill=tk.X, pady=2)
+        ttk.Label(font_row, text="Figlet font:").pack(side=tk.LEFT)
+        self.figlet_font_var = tk.StringVar(value=self.config.figlet_font or "slant")
+        ttk.Entry(font_row, textvariable=self.figlet_font_var, width=16).pack(
+            side=tk.LEFT, padx=(10, 0)
+        )
+
+        coord_row = ttk.Frame(dash_frame)
+        coord_row.pack(fill=tk.X, pady=2)
+        ttk.Label(coord_row, text="Latitude:").pack(side=tk.LEFT)
+        lat_val = "" if self.config.latitude is None else str(self.config.latitude)
+        self.lat_var = tk.StringVar(value=lat_val)
+        ttk.Entry(coord_row, textvariable=self.lat_var, width=12).pack(
+            side=tk.LEFT, padx=(10, 16)
+        )
+        ttk.Label(coord_row, text="Longitude:").pack(side=tk.LEFT)
+        lon_val = "" if self.config.longitude is None else str(self.config.longitude)
+        self.lon_var = tk.StringVar(value=lon_val)
+        ttk.Entry(coord_row, textvariable=self.lon_var, width=12).pack(
+            side=tk.LEFT, padx=(10, 0)
+        )
+
+        ttk.Label(
+            dash_frame,
+            text="Paste lat/lon from Google Maps. Leave empty for time/date only.",
+            font=("", 8),
+        ).pack(anchor=tk.W, pady=(0, 4))
+
+        unit_row = ttk.Frame(dash_frame)
+        unit_row.pack(fill=tk.X, pady=2)
+        ttk.Label(unit_row, text="Temperature unit:").pack(side=tk.LEFT)
+        self.temp_unit_var = tk.StringVar(value=self.config.temperature_unit or "celsius")
+        ttk.Radiobutton(
+            unit_row, text="C", variable=self.temp_unit_var, value="celsius"
+        ).pack(side=tk.LEFT, padx=(10, 4))
+        ttk.Radiobutton(
+            unit_row, text="F", variable=self.temp_unit_var, value="fahrenheit"
+        ).pack(side=tk.LEFT)
+
+        loc_row = ttk.Frame(dash_frame)
+        loc_row.pack(fill=tk.X, pady=2)
+        ttk.Label(loc_row, text="Location label (optional):").pack(side=tk.LEFT)
+        self.location_label_var = tk.StringVar(value=self.config.location_label or "")
+        ttk.Entry(loc_row, textvariable=self.location_label_var, width=28).pack(
+            side=tk.LEFT, padx=(10, 0)
+        )
+
+        max_row = ttk.Frame(dash_frame)
+        max_row.pack(fill=tk.X, pady=2)
+        ttk.Label(max_row, text="Max effect seconds:").pack(side=tk.LEFT)
+        self.max_effect_seconds_var = tk.StringVar(
+            value=str(getattr(self.config, "max_effect_seconds", 45) or 45)
+        )
+        ttk.Entry(max_row, textvariable=self.max_effect_seconds_var, width=8).pack(
+            side=tk.LEFT, padx=(10, 0)
+        )
+
         # ASCII Art section
-        art_label = ttk.Label(main_frame, text="ASCII Art:", font=("", 10, "bold"))
+        art_label = ttk.Label(main_frame, text="ASCII Art (fallback):", font=("", 10, "bold"))
         art_label.pack(anchor=tk.W, pady=(0, 5))
 
         art_hint = ttk.Label(
             main_frame,
-            text="Paste your ASCII art below. Generate at: patorjk.com/software/taag",
+            text="Used when live dashboard is off. Generate at: patorjk.com/software/taag",
             font=("", 8),
         )
         art_hint.pack(anchor=tk.W)
@@ -45,7 +127,7 @@ class ConfigDialog:
         self.art_text = scrolledtext.ScrolledText(
             main_frame,
             width=80,
-            height=15,
+            height=8,
             font=("Consolas", 10),
             wrap=tk.NONE,
         )
@@ -137,15 +219,32 @@ class ConfigDialog:
 
     def _load_current_config(self) -> None:
         """Load current config values into the dialog."""
-        # Set ASCII art
         self.art_text.delete("1.0", tk.END)
         self.art_text.insert("1.0", self.config.ascii_art)
 
-        # Effect checkboxes are already set in _create_widgets
+        self.use_live_dashboard_var.set(bool(self.config.use_live_dashboard))
+        self.clock_format_var.set(self.config.clock_format or "24h")
+        self.figlet_font_var.set(self.config.figlet_font or "slant")
+        self.lat_var.set("" if self.config.latitude is None else str(self.config.latitude))
+        self.lon_var.set("" if self.config.longitude is None else str(self.config.longitude))
+        self.temp_unit_var.set(self.config.temperature_unit or "celsius")
+        self.location_label_var.set(self.config.location_label or "")
+        self.max_effect_seconds_var.set(str(getattr(self.config, "max_effect_seconds", 45) or 45))
+        self.font_var.set(str(self.config.font_size))
+        self.fps_var.set(str(self.config.target_fps))
 
     def _get_enabled_effects(self) -> List[str]:
         """Get list of enabled effects from checkboxes."""
         return [name for name, var in self.effect_vars.items() if var.get()]
+
+    def _parse_coord(self, raw: str, name: str) -> tuple[Optional[float], Optional[str]]:
+        raw = (raw or "").strip()
+        if raw == "":
+            return None, None
+        try:
+            return float(raw), None
+        except ValueError:
+            return None, f"Invalid {name}. Use a number or leave empty."
 
     def _validate_and_get_config(self) -> Config | None:
         """Validate inputs and return new config, or None if invalid."""
@@ -170,10 +269,36 @@ class ConfigDialog:
             messagebox.showerror("Error", "Please select at least one effect.")
             return None
 
+        use_live = bool(self.use_live_dashboard_var.get())
         ascii_art = self.art_text.get("1.0", tk.END).rstrip()
-        if not ascii_art.strip():
+        if not use_live and not ascii_art.strip():
             messagebox.showerror("Error", "Please enter some ASCII art.")
             return None
+
+        latitude, err = self._parse_coord(self.lat_var.get(), "latitude")
+        if err:
+            messagebox.showerror("Error", err)
+            return None
+        longitude, err = self._parse_coord(self.lon_var.get(), "longitude")
+        if err:
+            messagebox.showerror("Error", err)
+            return None
+
+        try:
+            max_effect_seconds = int(self.max_effect_seconds_var.get().strip())
+            if max_effect_seconds <= 0:
+                raise ValueError("must be positive")
+        except ValueError:
+            messagebox.showerror("Error", "Max effect seconds must be a positive integer.")
+            return None
+
+        clock_format = (self.clock_format_var.get() or "24h").strip()
+        if clock_format not in ("24h", "12h"):
+            clock_format = "24h"
+
+        temp_unit = (self.temp_unit_var.get() or "celsius").strip()
+        if temp_unit not in ("celsius", "fahrenheit"):
+            temp_unit = "celsius"
 
         return Config(
             ascii_art=ascii_art,
@@ -181,6 +306,14 @@ class ConfigDialog:
             font_size=font_size,
             background_color=self.config.background_color,
             target_fps=fps,
+            use_live_dashboard=use_live,
+            clock_format=clock_format,
+            figlet_font=(self.figlet_font_var.get() or "slant").strip() or "slant",
+            latitude=latitude,
+            longitude=longitude,
+            temperature_unit=temp_unit,
+            location_label=self.location_label_var.get(),
+            max_effect_seconds=max_effect_seconds,
         )
 
     def _save(self) -> None:

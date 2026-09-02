@@ -2,7 +2,8 @@
 
 import random
 import threading
-from typing import Iterator, Optional, Dict, Type, List
+import time
+from typing import Callable, Iterator, Optional, Dict, Type, List
 
 # Import all available TTE effects
 from terminaltexteffects.effects.effect_beams import Beams
@@ -97,10 +98,15 @@ class EffectManager:
         canvas_width: int = 80,
         canvas_height: int = 24,
         start_index: Optional[int] = None,
+        text_provider: Callable[[], str] = None,
+        max_effect_seconds: Optional[int] = None,
     ):
         self.text = text
+        self.text_provider = text_provider
+        self.max_effect_seconds = max_effect_seconds
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
+        self._effect_started_at = time.monotonic()
 
         # Filter enabled effects to only valid ones
         self.enabled_effects = [
@@ -127,11 +133,19 @@ class EffectManager:
 
         # Create first effect (blocking - need it now)
         self._current_iterator = self._create_effect_iterator(self._current_index)
+        # Duration clock starts when the effect becomes CURRENT, not at preload.
+        self._effect_started_at = time.monotonic()
         # Start background pre-load of next effect
         self._start_background_preload()
 
     def _create_effect_iterator(self, index: int) -> Iterator[str]:
         """Create an effect iterator for the given index."""
+        if self.text_provider:
+            try:
+                self.text = self.text_provider()
+            except Exception:
+                pass  # keep previous / initial text
+
         effect_name = self.enabled_effects[index]
         effect_class = AVAILABLE_EFFECTS[effect_name]
 
@@ -181,6 +195,7 @@ class EffectManager:
                 self._current_index = self._next_index
                 self._current_iterator = self._next_iterator
                 self._next_iterator = None
+                self._effect_started_at = time.monotonic()
             self._effect_completed = False
 
         # Start background pre-load of the NEXT next effect
@@ -190,6 +205,11 @@ class EffectManager:
         """Get the next frame. Returns None when effect completes or errors."""
         if self._current_iterator is None:
             return None
+
+        if self.max_effect_seconds is not None and self.max_effect_seconds > 0:
+            if time.monotonic() - self._effect_started_at >= self.max_effect_seconds:
+                self._effect_completed = True
+                return None
 
         try:
             return next(self._current_iterator)

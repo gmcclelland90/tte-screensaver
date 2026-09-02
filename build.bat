@@ -11,6 +11,9 @@ REM Build with PyInstaller
 pyinstaller --onefile --windowed ^
     --name "tte-screensaver" ^
     --add-data "assets;assets" ^
+    --collect-data pyfiglet ^
+    --hidden-import pyfiglet ^
+    --hidden-import src.dashboard ^
     --hidden-import terminaltexteffects.effects.effect_beams ^
     --hidden-import terminaltexteffects.effects.effect_binarypath ^
     --hidden-import terminaltexteffects.effects.effect_blackhole ^

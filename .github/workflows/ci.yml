@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install test deps
+        run: pip install pyfiglet
+
+      - name: Syntax check
+        run: python -m py_compile run.py src/__init__.py src/config.py src/config_dialog.py src/dashboard.py src/effects.py src/main.py src/renderer.py src/screensaver.py
+
+      - name: Dashboard smoke
+        run: python tests/test_dashboard.py

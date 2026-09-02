@@ -2,9 +2,9 @@
 
 import json
 import os
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 
 # Default effects to cycle through - all available effects
@@ -65,6 +65,14 @@ class Config:
     font_size: int = 18  # Match Omarchy
     background_color: Tuple[int, int, int] = (0, 0, 0)
     target_fps: int = 120  # Match Omarchy
+    use_live_dashboard: bool = True
+    clock_format: str = "24h"  # "24h" | "12h"
+    figlet_font: str = "slant"
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    temperature_unit: str = "celsius"  # "celsius" | "fahrenheit"
+    location_label: str = ""
+    max_effect_seconds: int = 45
 
     def to_dict(self) -> dict:
         """Convert config to dictionary for JSON serialization."""
@@ -72,11 +80,50 @@ class Config:
 
     @classmethod
     def from_dict(cls, data: dict) -> "Config":
-        """Create config from dictionary."""
-        # Handle tuple conversion for background_color
-        if "background_color" in data and isinstance(data["background_color"], list):
-            data["background_color"] = tuple(data["background_color"])
-        return cls(**data)
+        """Create config from dictionary. Unknown keys ignored; old files still load."""
+        allowed = {f.name for f in fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in allowed}
+
+        if "background_color" in filtered and isinstance(filtered["background_color"], list):
+            filtered["background_color"] = tuple(filtered["background_color"])
+
+        for key in ("latitude", "longitude"):
+            if key in filtered:
+                filtered[key] = _coerce_coord(filtered[key])
+
+        if "use_live_dashboard" in filtered:
+            filtered["use_live_dashboard"] = _coerce_bool(filtered["use_live_dashboard"])
+
+        if "max_effect_seconds" in filtered:
+            try:
+                filtered["max_effect_seconds"] = int(filtered["max_effect_seconds"])
+            except (TypeError, ValueError):
+                filtered["max_effect_seconds"] = 45
+
+        return cls(**filtered)
+
+
+
+def _coerce_coord(value) -> Optional[float]:
+    """None, "", "null" -> None; otherwise float(). 0.0 is valid."""
+    if value is None:
+        return None
+    if isinstance(value, str) and value.strip().lower() in ("", "null", "none"):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _coerce_bool(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on")
+    return bool(value)
 
 
 def get_config_path() -> Path:

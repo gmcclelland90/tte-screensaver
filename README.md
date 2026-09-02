@@ -1,42 +1,47 @@
-# TTE Screensaver for Windows
+# TTE Screensaver (live dashboard fork)
 
-**Bring the iconic Omarchy Linux screensaver experience to Windows.** Stunning terminal text effects animate your custom ASCII art across all your monitors.
+A focused fork of [limehawk/tte-screensaver](https://github.com/limehawk/tte-screensaver) (MIT). Credit to **limehawk** for the original multi-monitor pygame screensaver and Terminal Text Effects pipeline.
 
-[![Download](https://img.shields.io/github/v/release/limehawk/tte-screensaver?label=Download&style=for-the-badge)](https://github.com/limehawk/tte-screensaver/releases/latest)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+Generated ASCII for **local time + date + weather** is the TTE input. Effects animate every character — there is no second HUD. The static LIMEHAWK logo remains as fallback when the live dashboard is off.
 
 ---
 
-## What is this?
+## Live dashboard
 
-If you've seen [Omarchy Linux](https://github.com/basecamp/omarchy) and loved their mesmerizing terminal screensaver effects, you've probably wished you could have the same thing on Windows. **Now you can.**
+Live dashboard is **on by default**: a figlet clock, a date line, and optional weather become the ASCII that TTE effects animate.
 
-TTE Screensaver brings 35+ animated terminal effects to Windows, rendering your custom ASCII art with the same visual flair that made Omarchy's screensaver famous.
+- **Time** is local (`datetime.now()`). Default 24h as `HH:MM` (no seconds — seconds would freeze until the next effect). 12h looks like `3:45 PM`.
+- **Date** under the clock, e.g. `Thursday  03 September 2026`.
+- **Weather** under that when latitude/longitude are set, e.g. `22°C  Partly cloudy` or `72°F  Clear`.
+- Optional **location label** on an extra line.
 
-### Features
+Set **latitude/longitude** in Settings (paste from Google Maps). Weather uses [Open-Meteo](https://open-meteo.com/) (no API key). If coords are unset or you are offline, time/date still show; last good weather is cached ~12 minutes.
 
-- **Multi-Monitor Support** - Each monitor runs its own independent effect with centered ASCII art
-- **35+ Visual Effects** - Matrix, Rain, Decrypt, Beams, Burn, Blackhole, VHSTape, and many more
-- **Custom ASCII Art** - Display your company logo, name, or any ASCII art you want
-- **Random Effect Cycling** - Effects run to completion then switch randomly
-- **Native Windows Integration** - Installs as a proper Windows screensaver (.scr)
-- **Configurable** - Adjust font size, FPS, and choose which effects to enable
+**Max effect seconds** (default 45) caps long effects like Matrix so they do not freeze an old minute on screen. ASCII is refreshed only when a new effect is created (including the preload thread).
 
 ---
 
 ## Quick Start
 
-### Download & Install
+### Run from source
 
-1. Download `tte-screensaver.scr` from the [latest release](https://github.com/limehawk/tte-screensaver/releases/latest)
-2. Right-click the `.scr` file → **Install**
-3. Or copy to `C:\Windows\System32\` for system-wide install
+```bash
+python run.py        # config dialog
+python run.py /s     # screensaver
+```
 
-### Configure
+### Build
 
-1. Right-click desktop → **Personalize** → **Lock screen** → **Screen saver settings**
-2. Select **tte-screensaver** from the dropdown
-3. Click **Settings** to customize your ASCII art and effects
+```bash
+build.bat
+# Output: dist/tte-screensaver.scr
+```
+
+### Install
+
+Right-click the `.scr` → **Install**, or copy to `C:\Windows\System32`, then **Personalize → Lock screen → Screen saver settings → tte-screensaver**.
+
+Settings persist in `%APPDATA%\tte-screensaver\config.json`.
 
 ---
 
@@ -44,12 +49,17 @@ TTE Screensaver brings 35+ animated terminal effects to Windows, rendering your 
 
 | Setting | Description |
 |---------|-------------|
-| **ASCII Art** | Your custom text/logo (generate at [patorjk.com/software/taag](https://patorjk.com/software/taag)) |
+| **Use live dashboard** | Figlet clock + date + optional weather as TTE ASCII (default on) |
+| **Clock format** | `24h` or `12h` |
+| **Figlet font** | Default `slant` |
+| **Latitude / longitude** | Paste from Google Maps. Leave empty for time/date only |
+| **Temperature unit** | Celsius or Fahrenheit |
+| **Location label** | Optional extra line under weather |
+| **Max effect seconds** | Switch effects at least this often (default 45) |
+| **ASCII Art** | Fallback logo when live dashboard is off |
 | **Enabled Effects** | Select which of the 35+ effects to cycle through |
-| **Font Size** | Text rendering size (default: 20) |
-| **Target FPS** | Animation smoothness (default: 100) |
-
-Settings stored in `%APPDATA%\tte-screensaver\config.json`
+| **Font Size** | Text rendering size (default: 18) |
+| **Target FPS** | Animation smoothness (default: 120) |
 
 ---
 
@@ -73,18 +83,14 @@ Settings stored in `%APPDATA%\tte-screensaver\config.json`
 ## Building from Source
 
 ```bash
-# Clone the repo
 git clone https://github.com/limehawk/tte-screensaver.git
 cd tte-screensaver
 
-# Install dependencies
 pip install -r requirements.txt
 
-# Run in development mode
 python run.py        # Config dialog
-python run.py /s     # Screensaver (windowed)
+python run.py /s     # Screensaver
 
-# Build the .scr file
 build.bat
 # Output: dist/tte-screensaver.scr
 ```
@@ -93,7 +99,7 @@ build.bat
 
 - Windows 10/11
 - Python 3.10+
-- Dependencies: terminaltexteffects, pygame
+- Dependencies: terminaltexteffects, pygame, pyfiglet
 
 ---
 
@@ -110,17 +116,13 @@ build.bat
 
 ## Credits
 
+- Fork of [limehawk/tte-screensaver](https://github.com/limehawk/tte-screensaver) by limehawk
 - Powered by [TerminalTextEffects](https://github.com/ChrisBuilds/terminaltexteffects) by ChrisBuilds
 - Inspired by [Omarchy Linux](https://github.com/basecamp/omarchy) screensaver
-
----
-
-## Keywords
-
-`windows screensaver` `terminal effects` `ascii art` `omarchy` `matrix effect` `terminal text effects` `tte` `animated screensaver` `multi-monitor screensaver` `custom screensaver`
+- Weather from [Open-Meteo](https://open-meteo.com/)
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT License - see [LICENSE](LICENSE) (from upstream limehawk).

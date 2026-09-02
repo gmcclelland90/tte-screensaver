@@ -4,14 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tte-screensaver"
-version = "0.1.1"
-description = "Windows screensaver using Terminal Text Effects"
+version = "0.2.0"
+description = "Windows screensaver using Terminal Text Effects — live time/date/weather fork"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
     "terminaltexteffects",
     "pygame",
+    "pyfiglet",
 ]
 
 [project.optional-dependencies]

@@ -10,6 +10,7 @@ from typing import Optional, Tuple, List, Dict
 from .config import Config, load_config
 from .renderer import ANSIRenderer, CellData
 from .effects import EffectManager
+from . import dashboard
 
 
 @dataclass
@@ -112,13 +113,17 @@ class MonitorEffect:
         self.canvas_width = monitor.width // renderer.char_width
         self.canvas_height = monitor.height // renderer.char_height
 
-        # Create effect manager for this monitor with unique starting effect
+        # Create effect manager for this monitor with unique starting effect.
+        # ascii_art is the fallback/initial text; live dashboard refreshes per new effect.
+        use_dash = getattr(config, 'use_live_dashboard', True)
         self.effect_manager = EffectManager(
             text=config.ascii_art,
             enabled_effects=config.enabled_effects,
             canvas_width=self.canvas_width,
             canvas_height=self.canvas_height,
             start_index=start_index,
+            text_provider=(lambda: dashboard.build_ascii(self.config)) if use_dash else None,
+            max_effect_seconds=getattr(config, 'max_effect_seconds', 45),
         )
 
         # Track previous frame for delta rendering
